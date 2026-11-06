@@ -690,7 +690,7 @@ function setupHeaderActionButtons(): void {
     const enabled = !isSoundEnabled();
     setSoundEnabled(enabled);
     if (audioIcon) {
-      audioIcon.textContent = enabled ? '🔊' : '🔇';
+      audioIcon.innerHTML = enabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
     }
     if (enabled) playClickSound();
   });
@@ -704,10 +704,10 @@ function setupHeaderActionButtons(): void {
 
     if (isLightMode) {
       document.body.classList.add('light-theme');
-      if (themeIcon) themeIcon.textContent = '🌙';
+      if (themeIcon) themeIcon.innerHTML = '<i class="fa-solid fa-moon"></i>';
     } else {
       document.body.classList.remove('light-theme');
-      if (themeIcon) themeIcon.textContent = '☀️';
+      if (themeIcon) themeIcon.innerHTML = '<i class="fa-solid fa-sun"></i>';
     }
 
     if (ecosystemScene) {

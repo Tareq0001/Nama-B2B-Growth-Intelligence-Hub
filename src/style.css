@@ -1,17 +1,17 @@
 /* ==========================================================================
    نَمَاء | NAMA — 3D B2B Business Development & Strategic Revenue Intelligence
-   Design System & Executive Theme Specification
+   Design System & Executive Theme Specification (Royal Executive 2030 Architecture)
    Author: أ. طارق ابوعشي — أخصائي تطوير الأعمال والشراكات الاستراتيجية
    ========================================================================== */
 
 :root {
-  /* Core Color Palette - Executive Dark Theme (Default) */
-  --bg-primary: #060b16;
-  --bg-secondary: #0b1329;
-  --bg-card: rgba(15, 23, 42, 0.82);
-  --bg-card-hover: rgba(24, 35, 62, 0.92);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(16, 185, 129, 0.4);
+  /* Core Color Palette - Sovereign Obsidian, Emerald Growth, Liquid Gold & Cyber Cyan */
+  --bg-primary: #030712;
+  --bg-secondary: #0a1122;
+  --bg-card: rgba(11, 19, 38, 0.78);
+  --bg-card-hover: rgba(17, 28, 54, 0.9);
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-active: rgba(16, 185, 129, 0.45);
 
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
@@ -19,30 +19,31 @@
 
   /* Executive Brand Accents */
   --accent-emerald: #10b981;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.35);
+  --accent-emerald-glow: rgba(16, 185, 129, 0.4);
   --accent-cyan: #06b6d4;
-  --accent-cyan-glow: rgba(6, 182, 212, 0.3);
+  --accent-cyan-glow: rgba(6, 182, 212, 0.35);
   --accent-gold: #f59e0b;
-  --accent-gold-glow: rgba(245, 158, 11, 0.35);
+  --accent-gold-glow: rgba(245, 158, 11, 0.4);
   --accent-violet: #8b5cf6;
   --accent-rose: #f43f5e;
 
   /* Fonts */
-  --font-main: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-main: 'Cairo', 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-en: 'Plus Jakarta Sans', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Dimensions & Spacing */
   --header-height: 72px;
   --footer-height: 48px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
   --radius-xl: 22px;
 }
 
 /* Light Theme Variables */
 body.light-theme {
-  --bg-primary: #f1f5f9;
+  --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-hover: #ffffff;
@@ -69,16 +70,37 @@ html, body {
   width: 100%;
   min-height: 100vh;
   font-family: var(--font-main);
-  background-color: var(--bg-primary);
+  background: radial-gradient(circle at 18% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 45%), radial-gradient(circle at 82% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 45%), #030712;
   color: var(--text-primary);
   line-height: 1.5;
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.light-theme {
+  background: radial-gradient(circle at 18% 15%, rgba(16, 185, 129, 0.06) 0%, transparent 45%), radial-gradient(circle at 82% 85%, rgba(6, 182, 212, 0.06) 0%, transparent 45%), #f8fafc;
 }
 
 button, input, select, textarea {
   font-family: inherit;
   color: inherit;
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.6);
 }
 
 /* ==========================================================================
@@ -297,33 +319,50 @@ body.light-theme .tab-btn.active {
    ========================================================================== */
 .split-3d-layout {
   display: grid;
-  grid-template-columns: 1fr 430px;
+  grid-template-columns: 1fr 440px;
   gap: 20px;
-  height: calc(100vh - var(--header-height) - var(--footer-height) - 40px);
-  min-height: 640px;
+  height: calc(100vh - var(--header-height) - 48px);
+  min-height: 680px;
 }
 
-/* Viewport Card */
+/* Viewport Card - Full-Bleed Holographic Viewport */
 .viewport-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  height: 100%;
+  min-height: 660px;
+  background: radial-gradient(ellipse at center, #0c172e 0%, #040814 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(6, 182, 212, 0.05);
 }
 
+/* Viewport Top Floating Glass HUD */
 .viewport-header-hud {
-  padding: 12px 18px;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(6, 11, 22, 0.65);
-  border-bottom: 1px solid var(--border-subtle);
-  z-index: 10;
+  pointer-events: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.camera-presets-group,
+.live-status-pill {
+  pointer-events: auto;
+  background: rgba(7, 13, 28, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 6px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .camera-presets-group {
@@ -346,37 +385,34 @@ body.light-theme .tab-btn.active {
 }
 
 .cam-btn {
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
   font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cam-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .cam-btn.active {
-  background: rgba(6, 182, 212, 0.2);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.25));
   border-color: var(--accent-cyan);
   color: #38bdf8;
-  box-shadow: 0 0 10px var(--accent-cyan-glow);
+  box-shadow: 0 0 14px var(--accent-cyan-glow);
 }
 
 .live-status-pill {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 999px;
   font-size: 0.76rem;
   font-weight: 600;
   color: #34d399;
@@ -397,13 +433,13 @@ body.light-theme .tab-btn.active {
   100% { transform: scale(0.9); opacity: 0.8; }
 }
 
-/* Canvas Wrapper */
+/* Canvas Wrapper - Absolute Full Bleed */
 .canvas-3d-wrapper {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  min-height: 380px;
-  position: relative;
-  overflow: hidden;
+  height: 100%;
+  z-index: 1;
 }
 
 .canvas-3d-wrapper canvas {
@@ -415,29 +451,36 @@ body.light-theme .tab-btn.active {
 /* Floating Telemetry HUD */
 .viewport-telemetry-hud {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 72px;
+  right: 16px;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 5;
   pointer-events: none;
 }
 
 [dir="ltr"] .viewport-telemetry-hud {
   right: auto;
-  left: 14px;
+  left: 16px;
 }
 
 .telemetry-card {
   padding: 8px 14px;
-  border-radius: var(--radius-md);
-  background: rgba(6, 11, 22, 0.82);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: rgba(7, 13, 28, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 3px solid var(--accent-emerald);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+[dir="ltr"] .telemetry-card {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--accent-emerald);
 }
 
 .telemetry-sub {
@@ -458,17 +501,27 @@ body.light-theme .tab-btn.active {
 .telemetry-val.health-val {
   color: var(--accent-emerald);
   font-family: var(--font-mono);
+  direction: ltr;
+  display: inline-block;
 }
 
-/* Viewport Footer HUD: 5-Stage Deal Pipeline Bar */
+/* Viewport Footer HUD: Floating Glass Platform */
 .viewport-footer-hud {
-  padding: 14px 18px;
-  background: rgba(6, 11, 22, 0.8);
-  border-top: 1px solid var(--border-subtle);
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  background: rgba(7, 13, 28, 0.86);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 12px 16px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  z-index: 10;
+  gap: 10px;
 }
 
 .pipeline-stages-bar {
@@ -481,13 +534,13 @@ body.light-theme .tab-btn.active {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
   text-align: right;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [dir="ltr"] .pipeline-step {
@@ -496,12 +549,14 @@ body.light-theme .tab-btn.active {
 
 .pipeline-step:hover {
   background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
 
 .pipeline-step.active {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.15));
-  border-color: var(--accent-emerald);
-  box-shadow: 0 0 14px var(--accent-emerald-glow);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.18));
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
 }
 
 .step-num {
@@ -520,7 +575,7 @@ body.light-theme .tab-btn.active {
 
 .pipeline-step.active .step-num {
   background: var(--accent-emerald);
-  color: #060b16;
+  color: #030712;
 }
 
 .step-meta {
@@ -542,6 +597,8 @@ body.light-theme .tab-btn.active {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--text-muted);
+  direction: ltr;
+  display: inline-block;
 }
 
 .pipeline-step.active .step-pct {
@@ -588,17 +645,20 @@ body.light-theme .tab-btn.active {
 /* ==========================================================================
    Controls Sidebar
    ========================================================================== */
-.controls-sidebar {
+.controls-sidebar,
+.controls-card {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--bg-card);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  background: rgba(11, 19, 38, 0.84);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
   padding: 20px;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  height: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
 
 .sidebar-title {
@@ -635,26 +695,27 @@ body.light-theme .tab-btn.active {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sector-pill:hover {
   background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
 
 .sector-pill.active {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: var(--accent-emerald);
-  color: var(--text-primary);
-  box-shadow: 0 0 10px var(--accent-emerald-glow);
+  border-color: var(--accent-cyan);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.12));
+  color: #f8fafc;
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.25);
 }
 
 .sec-dot {
@@ -671,7 +732,7 @@ body.light-theme .tab-btn.active {
 
 /* Sliders Section */
 .sliders-section {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   padding: 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
@@ -704,6 +765,8 @@ body.light-theme .sliders-section {
   background: rgba(16, 185, 129, 0.15);
   color: var(--accent-emerald);
   border: 1px solid rgba(16, 185, 129, 0.3);
+  direction: ltr;
+  display: inline-block;
 }
 
 .slider-val-badge.warning-badge {
@@ -842,21 +905,29 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: var(--text-muted);
 }
 
-/* KPI Financial Summary Grid */
-.kpi-financial-grid {
+/* KPI Financial Summary Grid / Bento Grid */
+.kpi-financial-grid,
+.kpi-bento-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 12px;
 }
 
 .kpi-card {
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   gap: 4px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .kpi-label {
@@ -866,8 +937,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .kpi-value {
   font-family: var(--font-mono);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
+  direction: ltr;
+  display: inline-block;
 }
 
 .highlight-gold { color: #fbbf24; }
@@ -880,30 +953,50 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: var(--text-muted);
 }
 
-/* Primary CTA Execute Button */
-.execute-deal-btn {
+/* Primary CTA Execute Button - Royal Emerald-Gold Luxury */
+.execute-deal-btn,
+.close-deal-cta-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 20px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #10b981, #059669);
-  border: none;
+  gap: 10px;
+  padding: 15px 22px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #d97706 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  font-size: 0.94rem;
+  font-size: 0.95rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 20px var(--accent-emerald-glow);
-  transition: all 0.25s ease;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.execute-deal-btn:hover {
+.execute-deal-btn::before,
+.close-deal-cta-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.execute-deal-btn:hover,
+.close-deal-cta-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 26px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
 }
 
-.execute-deal-btn:active {
+.execute-deal-btn:hover::before,
+.close-deal-cta-btn:hover::before {
+  transform: translateX(100%);
+}
+
+.execute-deal-btn:active,
+.close-deal-cta-btn:active {
   transform: translateY(0);
 }
 
@@ -956,6 +1049,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid var(--accent-emerald);
   color: var(--accent-emerald);
+  direction: ltr;
+  display: inline-block;
 }
 
 .badge-hint, .badge-formula, .arr-badge-total {
@@ -1024,6 +1119,8 @@ body.light-theme .canvas-box {
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--accent-emerald);
+  direction: ltr;
+  display: inline-block;
 }
 
 /* Interactive Opportunity Table */
@@ -1084,6 +1181,8 @@ body.light-theme .opp-table th {
   font-family: var(--font-mono);
   font-weight: 700;
   color: #34d399;
+  direction: ltr;
+  display: inline-block;
 }
 
 /* Tab 3: Calc Inputs & Results */
@@ -1122,6 +1221,8 @@ body.light-theme .calc-inputs-grid {
   border-radius: var(--radius-sm);
   background: rgba(16, 185, 129, 0.15);
   color: var(--accent-emerald);
+  direction: ltr;
+  display: inline-block;
 }
 
 .calc-results-grid {
@@ -1149,6 +1250,8 @@ body.light-theme .calc-inputs-grid {
   font-family: var(--font-mono);
   font-size: 1.25rem;
   font-weight: 800;
+  direction: ltr;
+  display: inline-block;
 }
 
 .res-sub {

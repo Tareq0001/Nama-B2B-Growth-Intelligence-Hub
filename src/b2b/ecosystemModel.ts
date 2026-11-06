@@ -107,6 +107,7 @@ export class B2BEcosystemScene {
   private mouse = new THREE.Vector2();
   private isPointerDown = false;
   private pointerDownPos = new THREE.Vector2();
+  private resizeObserver?: ResizeObserver;
 
   constructor(container: HTMLElement, onStageSelect?: (stageIndex: number) => void) {
     this.container = container;
@@ -117,10 +118,10 @@ export class B2BEcosystemScene {
     this.scene.background = new THREE.Color(0x060b16);
     this.scene.fog = new THREE.FogExp2(0x060b16, 0.022);
 
-    // 2. Camera setup
+    // 2. Camera setup - Centered between top HUD & bottom HUD
     const aspect = this.container.clientWidth / (this.container.clientHeight || 1);
     this.camera = new THREE.PerspectiveCamera(46, aspect, 0.1, 100);
-    this.camera.position.set(12, 8.5, 13.5);
+    this.camera.position.set(11.5, 7.5, 12.8);
 
     // 3. WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -141,7 +142,15 @@ export class B2BEcosystemScene {
     this.controls.maxDistance = 32;
     this.controls.minDistance = 3.5;
     this.controls.maxPolarAngle = Math.PI / 2 + 0.08; // Allow slight under-horizon look
-    this.controls.target.set(0, 0.5, 0);
+    this.controls.target.set(0, -0.2, 0);
+
+    // Auto-ResizeObserver for container layout changes
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.resize();
+      });
+      this.resizeObserver.observe(this.container);
+    }
 
     // 5. Lighting
     this.ambientLight = new THREE.AmbientLight(0xdbeafe, 0.7);
@@ -273,9 +282,151 @@ export class B2BEcosystemScene {
   // ==========================================
   // Subsystem 2: Kinetic Funnel (5 Stages)
   // ==========================================
+  private createFunnelStageSprite(stage: (typeof PIPELINE_STAGES)[0], conversionPct: string): THREE.Sprite {
+    const canvas = document.createElement('canvas');
+    canvas.width = 420;
+    canvas.height = 120;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      const r = 20;
+      const x = 10;
+      const y = 10;
+      const w = canvas.width - 20;
+      const h = canvas.height - 20;
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+
+      ctx.fillStyle = 'rgba(7, 13, 28, 0.88)';
+      ctx.fill();
+
+      ctx.strokeStyle = stage.colorHex;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = stage.colorHex;
+      ctx.shadowBlur = 14;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Circle number badge
+      ctx.beginPath();
+      ctx.arc(x + 40, y + 50, 22, 0, Math.PI * 2);
+      ctx.fillStyle = stage.colorHex;
+      ctx.fill();
+
+      ctx.fillStyle = '#030712';
+      ctx.font = 'bold 24px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(stage.index + 1), x + 40, y + 50);
+
+      // Title & conversion
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px "Plus Jakarta Sans", "Cairo", sans-serif';
+      const shortTitle = stage.badgeEn.replace(/Stage \d+:\s*/, '');
+      ctx.fillText(shortTitle, x + 76, y + 46);
+
+      ctx.fillStyle = stage.colorHex;
+      ctx.font = 'bold 20px "JetBrains Mono", monospace';
+      ctx.fillText('Conv: ' + conversionPct, x + 76, y + 80);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false
+    });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(1.9, 0.54, 1.0);
+    return sprite;
+  }
+
+  private createSectorSprite(node: (typeof ECOSYSTEM_NODES)[0]): THREE.Sprite {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      const r = 24;
+      const x = 12;
+      const y = 12;
+      const w = canvas.width - 24;
+      const h = canvas.height - 24;
+
+      // Card rounded background
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+
+      // Deep glass background
+      ctx.fillStyle = 'rgba(7, 13, 28, 0.90)';
+      ctx.fill();
+
+      // Glowing border
+      ctx.strokeStyle = node.colorHex;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = node.colorHex;
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Glow dot
+      ctx.beginPath();
+      ctx.arc(x + 36, y + 54, 10, 0, Math.PI * 2);
+      ctx.fillStyle = node.colorHex;
+      ctx.shadowColor = node.colorHex;
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Sector English & Arabic name
+      ctx.font = 'bold 30px "Plus Jakarta Sans", "Cairo", sans-serif';
+      ctx.fillStyle = '#f8fafc';
+      ctx.textAlign = 'left';
+      ctx.fillText(node.nameEn, x + 58, y + 64);
+
+      // ACV Subtitle badge
+      ctx.font = 'bold 24px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText(node.acvLabel, x + 58, y + 116);
+
+      // Status pill badge
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      ctx.fillRect(x + w - 105, y + 26, 88, 30);
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 15px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('ACTIVE', x + w - 61, y + 46);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false
+    });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(2.4, 0.9, 1.0);
+    return sprite;
+  }
+
   private buildKineticFunnel(): void {
     const stageY = [3.2, 1.9, 0.6, -0.7, -2.0];
     const stageRadius = [4.2, 3.5, 2.8, 2.1, 1.4];
+    const conversionBenchmarks = ['~38%', '~56%', '~71%', '~85%', '100%'];
 
     PIPELINE_STAGES.forEach((stage, idx) => {
       const y = stageY[idx];
@@ -321,6 +472,12 @@ export class B2BEcosystemScene {
       hitMesh.userData = { stageIndex: idx };
       this.funnelGroup.add(hitMesh);
       this.interactiveMeshes.push(hitMesh);
+
+      // 4. Holographic Funnel Stage Floating Telemetry Badge
+      const stageSprite = this.createFunnelStageSprite(stage, conversionBenchmarks[idx]);
+      const angle = -0.45;
+      stageSprite.position.set(Math.cos(angle) * (r + 1.1), y, Math.sin(angle) * (r + 1.1));
+      this.funnelGroup.add(stageSprite);
 
       this.funnelRings.push({
         stageIndex: idx,
@@ -370,6 +527,11 @@ export class B2BEcosystemScene {
       const haloMesh = new THREE.Mesh(haloGeom, haloMat);
       haloMesh.rotation.x = Math.PI / 2.3;
       nodeGroup.add(haloMesh);
+
+      // Floating Holographic 3D Data Banner above sector tower
+      const sectorSprite = this.createSectorSprite(node);
+      sectorSprite.position.set(x, y + 0.95, z);
+      this.sectorsGroup.add(sectorSprite);
 
       this.sectorsGroup.add(nodeGroup);
 
@@ -574,8 +736,8 @@ export class B2BEcosystemScene {
   public setCameraPreset(preset: CameraPreset): void {
     const presets: Record<CameraPreset, { pos: THREE.Vector3; target: THREE.Vector3 }> = {
       orbit: {
-        pos: new THREE.Vector3(12.0, 8.5, 13.5),
-        target: new THREE.Vector3(0, 0.5, 0)
+        pos: new THREE.Vector3(11.5, 7.5, 12.8),
+        target: new THREE.Vector3(0, -0.2, 0)
       },
       ecosystem: {
         pos: new THREE.Vector3(0.1, 16.5, 8.5),
@@ -711,6 +873,9 @@ export class B2BEcosystemScene {
   public dispose(): void {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
     }
     window.removeEventListener('resize', () => this.resize());
     this.controls.dispose();
