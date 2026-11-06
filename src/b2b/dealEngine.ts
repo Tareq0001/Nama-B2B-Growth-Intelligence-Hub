@@ -3,7 +3,7 @@
  * Core domain types, financial calculators, pipeline taxonomy, MEDDIC engine & Web Audio sound effects.
  */
 
-export type SectorKey = 'fintech' | 'govtech' | 'cloud_ai' | 'telecom';
+export type SectorKey = 'fintech' | 'govtech' | 'cloud_ai' | 'telecom' | 'healthtech' | 'retail';
 
 export interface DealParams {
   sector: SectorKey;
@@ -108,7 +108,7 @@ export const PIPELINE_STAGES: PipelineStageInfo[] = [
     index: 4,
     titleAr: 'إتمام التعاقد وتنمية الإيرادات الدورية (Closed-Won)',
     titleEn: 'Contract Execution, ARR Expansion & Customer Success Onboarding',
-    badgeAr: 'المرحلة 5: الإغلاق والنمو',
+    badgeAr: 'المرحلة 5: إتمام التعاقد',
     badgeEn: 'Stage 5: Closed-Won & ARR Expansion',
     descAr: 'توقيع العقود الرسمية، بدء مسار نجاح العملاء، ووضع خطة التوسع المتبادل لزيادة معدل صافي الإيرادات المتكررة (NRR).',
     descEn: 'Contract signature, immediate onboarding kickoff, customer success alignment and land-and-expand ARR strategy.',
@@ -213,6 +213,36 @@ export const SECTOR_PRESETS: Record<
     leverPoc: true,
     leverAlliance: true,
     colorHex: '#3b82f6'
+  },
+  healthtech: {
+    nameAr: 'الرعاية الصحية الرقمية والمستشفيات',
+    nameEn: 'HealthTech Enterprise & Smart Hospitals',
+    clientAr: 'مستشفى الملك فيصل التخصصي ومركز الأبحاث',
+    clientEn: 'King Faisal Specialist Hospital & Research Centre',
+    acv: 1600000,
+    years: 3,
+    discount: 10,
+    meddicScore: 82,
+    leverRoi: true,
+    leverSla: true,
+    leverPoc: true,
+    leverAlliance: false,
+    colorHex: '#ec4899'
+  },
+  retail: {
+    nameAr: 'سلاسل الإمداد والتجزئة الذكية',
+    nameEn: 'Smart Retail & Supply Chain Platforms',
+    clientAr: 'مجموعة الدانوب وبن داود القابضة',
+    clientEn: 'BinDawood Holding & Smart Omnichannel Supply Chain',
+    acv: 1450000,
+    years: 3,
+    discount: 12,
+    meddicScore: 80,
+    leverRoi: true,
+    leverSla: false,
+    leverPoc: true,
+    leverAlliance: true,
+    colorHex: '#f59e0b'
   }
 };
 
@@ -440,7 +470,9 @@ export function calculateDealMetrics(params: DealParams): DealMetrics {
     fintech: 76,
     govtech: 73,
     cloud_ai: 78,
-    telecom: 71
+    telecom: 71,
+    healthtech: 75,
+    retail: 72
   };
   const sectorMargin = baseMarginMap[params.sector] || 74;
 

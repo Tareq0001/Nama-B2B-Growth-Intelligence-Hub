@@ -143,8 +143,8 @@ export function renderMeddicRadar(
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // 4. Vertex Points & Score Badges
-  polygonPoints.forEach((pt, i) => {
+  // 4. Vertex Points
+  polygonPoints.forEach((pt) => {
     // Vertex dot
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
@@ -153,24 +153,12 @@ export function renderMeddicRadar(
     ctx.lineWidth = 2;
     ctx.strokeStyle = accentCyan;
     ctx.stroke();
-
-    // Value badge
-    const angle = startAngle + i * angleStep;
-    const badgeR = radius * (pt.score / 100) + 14;
-    const bx = cx + Math.cos(angle) * badgeR;
-    const by = cy + Math.sin(angle) * badgeR;
-
-    ctx.fillStyle = isLight ? '#065f46' : '#34d399';
-    ctx.font = 'bold 10px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`${pt.score}%`, bx, by);
   });
 
-  // 5. Exterior Axis Title Labels
+  // 5. Exterior Axis Title Labels (pushed outward with score inline)
   for (let i = 0; i < totalAxes; i++) {
     const angle = startAngle + i * angleStep;
-    const labelR = radius + 28;
+    const labelR = radius + 34;
     const lx = cx + Math.cos(angle) * labelR;
     const ly = cy + Math.sin(angle) * labelR;
 
@@ -178,7 +166,7 @@ export function renderMeddicRadar(
     ctx.font = 'bold 11px Cairo, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(axes[i].label, lx, ly);
+    ctx.fillText(`${axes[i].label} (${axes[i].score}%)`, lx, ly);
   }
 
   // 6. Central Readiness Score Readout
@@ -286,21 +274,21 @@ export function renderOpportunityMatrix(
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Quadrant Watermark Labels
+  // Quadrant Watermark Labels in non-colliding corners
   ctx.font = 'bold 11px Cairo, sans-serif';
   ctx.fillStyle = isLight ? 'rgba(15, 23, 42, 0.45)' : 'rgba(255, 255, 255, 0.35)';
 
   ctx.textAlign = 'left';
-  ctx.fillText(lang === 'ar' ? '⚡ صفقات سريعة عالية العائد (Fast Strategic Wins)' : '⚡ Fast Strategic Wins', padLeft + 10, padTop + 18);
+  ctx.fillText(lang === 'ar' ? '⚡ صفقات سريعة عالية العائد' : '⚡ Fast Strategic Wins', padLeft + 12, padTop + 16);
 
   ctx.textAlign = 'right';
-  ctx.fillText(lang === 'ar' ? '🐋 صفقات كبرى استراتيجية (Enterprise Whales)' : '🐋 Enterprise Whales', width - padRight - 10, padTop + 18);
+  ctx.fillText(lang === 'ar' ? '🐋 صفقات كبرى استراتيجية' : '🐋 Enterprise Whales', width - padRight - 12, padTop + 16);
 
   ctx.textAlign = 'left';
-  ctx.fillText(lang === 'ar' ? '🌱 فرص تنمية ونمو تكتيكي (Nurture Pipeline)' : '🌱 Tactical Nurture', padLeft + 10, height - padBottom - 10);
+  ctx.fillText(lang === 'ar' ? '🌱 فرص تنمية ونمو تكتيكي' : '🌱 Tactical Nurture', padLeft + 12, height - padBottom - 10);
 
   ctx.textAlign = 'right';
-  ctx.fillText(lang === 'ar' ? '⚠️ فرص معقدة تتطلب إعادة هيكلة (Re-qualify)' : '⚠️ Re-qualify Needed', width - padRight - 10, height - padBottom - 10);
+  ctx.fillText(lang === 'ar' ? '⚠️ فرص تتطلب إعادة هيكلة' : '⚠️ Re-qualify Needed', width - padRight - 12, height - padBottom - 10);
 
   // Axes lines
   ctx.strokeStyle = isLight ? '#cbd5e1' : '#334155';
@@ -357,34 +345,48 @@ export function renderOpportunityMatrix(
   );
   ctx.restore();
 
-  // Draw static opportunities from ENTERPRISE_OPPORTUNITIES
-  (opportunities || []).forEach((opp) => {
+  // Draw static opportunities with alternating non-overlapping badges
+  (opportunities || []).forEach((opp, idx) => {
     const ox = toX(opp.cycleDays);
     const oy = toY(opp.winProb);
-    const radius = Math.max(6, Math.min(20, Math.sqrt(opp.acv / 1000) * 0.42));
+    const radius = Math.max(7, Math.min(18, Math.sqrt(opp.acv / 1000) * 0.40));
     const strokeColor = opp.color || '#06b6d4';
 
     ctx.beginPath();
     ctx.arc(ox, oy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = `${strokeColor}bb`;
+    ctx.fillStyle = `${strokeColor}cc`;
     ctx.fill();
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = strokeColor;
     ctx.stroke();
 
-    // Account Label
-    ctx.font = '10px Cairo, sans-serif';
+    // Short Company Name
+    const rawName = lang === 'ar' ? opp.accountAr : opp.accountEn;
+    const shortName = rawName.split(' - ')[0].trim();
+
+    // Alternating vertical offset so labels never collide
+    const isAbove = idx % 2 === 0;
+    const offsetY = isAbove ? -radius - 12 : radius + 14;
+
+    // Small elegant badge
+    ctx.font = 'bold 10px Cairo, sans-serif';
+    const textW = ctx.measureText(shortName).width + 8;
+    const textH = 16;
+    const badgeX = Math.min(width - padRight - textW / 2, Math.max(padLeft + textW / 2, ox)) - textW / 2;
+    const badgeY = oy + offsetY - (isAbove ? textH : 0);
+
+    ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.92)' : 'rgba(15, 23, 42, 0.90)';
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, textW, textH, 4);
+    ctx.fill();
+    ctx.stroke();
+
     ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    const label = lang === 'ar' ? opp.accountAr.split(' - ')[0] : opp.accountEn.split(' - ')[0];
-    ctx.fillText(label, ox, oy - radius - 3);
-
-    // ACV pill
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillStyle = isLight ? '#475569' : '#cbd5e1';
-    ctx.textBaseline = 'top';
-    ctx.fillText(formatSar(opp.acv, lang), ox, oy + radius + 2);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(shortName, badgeX + textW / 2, badgeY + textH / 2);
   });
 
   // Active Simulated Deal Bubble

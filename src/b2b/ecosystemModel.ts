@@ -10,6 +10,9 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import gsap from 'gsap';
 import {
   DealParams,
@@ -61,6 +64,7 @@ export class B2BEcosystemScene {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private composer!: EffectComposer;
   private controls: OrbitControls;
 
   // Scene lighting & environment
@@ -76,6 +80,7 @@ export class B2BEcosystemScene {
   private reactorInnerMesh!: THREE.Mesh<THREE.IcosahedronGeometry, THREE.MeshStandardMaterial>;
   private reactorCageMesh!: THREE.Mesh<THREE.OctahedronGeometry, THREE.MeshStandardMaterial>;
   private energyPillarMesh!: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshBasicMaterial>;
+  private energyRingMesh!: THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
 
   // Funnel Rings
   private funnelGroup: THREE.Group;
@@ -115,13 +120,13 @@ export class B2BEcosystemScene {
 
     // 1. Scene setup
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x060b16);
-    this.scene.fog = new THREE.FogExp2(0x060b16, 0.022);
+    this.scene.background = new THREE.Color(0x040915);
+    this.scene.fog = new THREE.FogExp2(0x040915, 0.02);
 
     // 2. Camera setup - Centered between top HUD & bottom HUD
     const aspect = this.container.clientWidth / (this.container.clientHeight || 1);
     this.camera = new THREE.PerspectiveCamera(46, aspect, 0.1, 100);
-    this.camera.position.set(11.5, 7.5, 12.8);
+    this.camera.position.set(11.8, 7.2, 13.2);
 
     // 3. WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -134,6 +139,18 @@ export class B2BEcosystemScene {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
     this.container.appendChild(this.renderer.domElement);
+
+    // 3.5 Real Optical WebGL Bloom Post-Processing
+    const renderPass = new RenderPass(this.scene, this.camera);
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(this.container.clientWidth, this.container.clientHeight),
+      0.75, // strength
+      0.35, // radius
+      0.82  // threshold
+    );
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(renderPass);
+    this.composer.addPass(bloomPass);
 
     // 4. OrbitControls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -169,10 +186,18 @@ export class B2BEcosystemScene {
     cyanLight.position.set(-10, 4, -8);
     this.scene.add(cyanLight);
 
-    // 6. Environment Floor & Radar Rings
-    this.gridHelper = new THREE.GridHelper(32, 32, 0x1e3a8a, 0x0f172a);
+    // 6. Environment Floor & Dual Grid (Emerald & Subtle Gold)
+    this.gridHelper = new THREE.GridHelper(36, 36, 0x10b981, 0x1e293b);
     this.gridHelper.position.y = -3.5;
+    (this.gridHelper.material as THREE.Material).transparent = true;
+    (this.gridHelper.material as THREE.Material).opacity = 0.32;
     this.scene.add(this.gridHelper);
+
+    const goldGrid = new THREE.GridHelper(36, 12, 0xf59e0b, 0x0f172a);
+    goldGrid.position.y = -3.49;
+    (goldGrid.material as THREE.Material).transparent = true;
+    (goldGrid.material as THREE.Material).opacity = 0.2;
+    this.scene.add(goldGrid);
 
     this.radarRingsGroup = new THREE.Group();
     this.radarRingsGroup.position.y = -3.48;
@@ -238,22 +263,35 @@ export class B2BEcosystemScene {
   // Subsystem 1: Central Revenue Reactor Core
   // ==========================================
   private buildReactorCore(): void {
-    // Inner pulsating crystal core
-    const innerGeom = new THREE.IcosahedronGeometry(0.85, 2);
+    // Inner pulsating crystal core - Royal Gold & Emerald
+    const innerGeom = new THREE.IcosahedronGeometry(0.88, 2);
     const innerMat = new THREE.MeshStandardMaterial({
-      color: 0x10b981,
-      emissive: 0x059669,
-      emissiveIntensity: 1.2,
-      roughness: 0.25,
-      metalness: 0.85,
+      color: 0xf59e0b,
+      emissive: 0x10b981,
+      emissiveIntensity: 1.6,
+      roughness: 0.2,
+      metalness: 0.9,
       wireframe: false
     });
     this.reactorInnerMesh = new THREE.Mesh(innerGeom, innerMat);
     this.reactorInnerMesh.position.y = 0.6;
     this.reactorGroup.add(this.reactorInnerMesh);
 
+    // Rotating horizontal energy ring around reactor
+    const energyRingGeom = new THREE.TorusGeometry(1.65, 0.04, 16, 64);
+    const energyRingMat = new THREE.MeshBasicMaterial({
+      color: 0xfbbf24,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending
+    });
+    this.energyRingMesh = new THREE.Mesh(energyRingGeom, energyRingMat);
+    this.energyRingMesh.position.y = 0.6;
+    this.energyRingMesh.rotation.x = Math.PI / 2;
+    this.reactorGroup.add(this.energyRingMesh);
+
     // Outer geometric containment cage
-    const cageGeom = new THREE.OctahedronGeometry(1.28, 1);
+    const cageGeom = new THREE.OctahedronGeometry(1.35, 1);
     const cageMat = new THREE.MeshStandardMaterial({
       color: 0x38bdf8,
       emissive: 0x0284c7,
@@ -351,64 +389,44 @@ export class B2BEcosystemScene {
 
   private createSectorSprite(node: (typeof ECOSYSTEM_NODES)[0]): THREE.Sprite {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 192;
+    canvas.width = 380;
+    canvas.height = 100;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      const r = 24;
-      const x = 12;
-      const y = 12;
-      const w = canvas.width - 24;
-      const h = canvas.height - 24;
+      const r = 16;
+      const x = 6;
+      const y = 6;
+      const w = canvas.width - 12;
+      const h = canvas.height - 12;
 
       // Card rounded background
       ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-
-      // Deep glass background
+      ctx.roundRect(x, y, w, h, r);
       ctx.fillStyle = 'rgba(7, 13, 28, 0.90)';
       ctx.fill();
 
       // Glowing border
       ctx.strokeStyle = node.colorHex;
-      ctx.lineWidth = 4;
-      ctx.shadowColor = node.colorHex;
-      ctx.shadowBlur = 18;
+      ctx.lineWidth = 3;
       ctx.stroke();
-      ctx.shadowBlur = 0;
 
       // Glow dot
       ctx.beginPath();
-      ctx.arc(x + 36, y + 54, 10, 0, Math.PI * 2);
+      ctx.arc(x + 24, y + h / 2, 8, 0, Math.PI * 2);
       ctx.fillStyle = node.colorHex;
-      ctx.shadowColor = node.colorHex;
-      ctx.shadowBlur = 12;
       ctx.fill();
-      ctx.shadowBlur = 0;
 
-      // Sector English & Arabic name
-      ctx.font = 'bold 30px "Plus Jakarta Sans", "Cairo", sans-serif';
-      ctx.fillStyle = '#f8fafc';
+      // Sector English / Arabic name
+      ctx.font = 'bold 22px "Plus Jakarta Sans", "Cairo", sans-serif';
+      ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'left';
-      ctx.fillText(node.nameEn, x + 58, y + 64);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(node.nameEn, x + 42, y + h / 2 - 12);
 
       // ACV Subtitle badge
-      ctx.font = 'bold 24px "JetBrains Mono", monospace';
+      ctx.font = 'bold 18px "JetBrains Mono", monospace';
       ctx.fillStyle = '#fbbf24';
-      ctx.fillText(node.acvLabel, x + 58, y + 116);
-
-      // Status pill badge
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
-      ctx.fillRect(x + w - 105, y + 26, 88, 30);
-      ctx.fillStyle = '#34d399';
-      ctx.font = 'bold 15px "JetBrains Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('ACTIVE', x + w - 61, y + 46);
+      ctx.fillText(node.acvLabel, x + 42, y + h / 2 + 14);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -419,7 +437,7 @@ export class B2BEcosystemScene {
       depthWrite: false
     });
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(2.4, 0.9, 1.0);
+    sprite.scale.set(2.1, 0.52, 1.0);
     return sprite;
   }
 
@@ -473,12 +491,6 @@ export class B2BEcosystemScene {
       this.funnelGroup.add(hitMesh);
       this.interactiveMeshes.push(hitMesh);
 
-      // 4. Holographic Funnel Stage Floating Telemetry Badge
-      const stageSprite = this.createFunnelStageSprite(stage, conversionBenchmarks[idx]);
-      const angle = -0.45;
-      stageSprite.position.set(Math.cos(angle) * (r + 1.1), y, Math.sin(angle) * (r + 1.1));
-      this.funnelGroup.add(stageSprite);
-
       this.funnelRings.push({
         stageIndex: idx,
         ringMesh,
@@ -496,11 +508,12 @@ export class B2BEcosystemScene {
   // ==========================================
   private buildOrbitingSectors(): void {
     const topFunnelY = 3.2;
+    const orbitRadius = 6.8;
 
     ECOSYSTEM_NODES.forEach((node, nodeIdx) => {
       const nodeGroup = new THREE.Group();
-      const x = Math.cos(node.angle) * node.dist;
-      const z = Math.sin(node.angle) * node.dist;
+      const x = Math.cos(node.angle) * orbitRadius;
+      const z = Math.sin(node.angle) * orbitRadius;
       const y = node.y;
 
       nodeGroup.position.set(x, y, z);
@@ -530,7 +543,7 @@ export class B2BEcosystemScene {
 
       // Floating Holographic 3D Data Banner above sector tower
       const sectorSprite = this.createSectorSprite(node);
-      sectorSprite.position.set(x, y + 0.95, z);
+      sectorSprite.position.set(x, y + 0.65, z);
       this.sectorsGroup.add(sectorSprite);
 
       this.sectorsGroup.add(nodeGroup);
@@ -736,7 +749,7 @@ export class B2BEcosystemScene {
   public setCameraPreset(preset: CameraPreset): void {
     const presets: Record<CameraPreset, { pos: THREE.Vector3; target: THREE.Vector3 }> = {
       orbit: {
-        pos: new THREE.Vector3(11.5, 7.5, 12.8),
+        pos: new THREE.Vector3(11.8, 7.2, 13.2),
         target: new THREE.Vector3(0, -0.2, 0)
       },
       ecosystem: {
@@ -868,6 +881,9 @@ export class B2BEcosystemScene {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    if (this.composer) {
+      this.composer.setSize(width, height);
+    }
   }
 
   public dispose(): void {
@@ -901,6 +917,10 @@ export class B2BEcosystemScene {
 
       this.reactorCageMesh.rotation.y -= delta * 0.6 * this.reactorSpinSpeed;
       this.reactorCageMesh.rotation.z += delta * 0.3 * this.reactorSpinSpeed;
+
+      if (this.energyRingMesh) {
+        this.energyRingMesh.rotation.z += delta * 0.45 * this.reactorSpinSpeed;
+      }
 
       // Pulse reactor energy scale subtly
       const pulse = 1.0 + Math.sin(elapsedTime * 3.5) * 0.04;
@@ -974,8 +994,12 @@ export class B2BEcosystemScene {
       this.starsParticles.rotation.y = elapsedTime * 0.015;
     }
 
-    // 6. Update controls & render
+    // 6. Update controls & render with real bloom post-processing
     this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    if (this.composer) {
+      this.composer.render();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 }
