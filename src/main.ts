@@ -24,6 +24,16 @@ import {
   renderArrGrowthChart,
   formatSar
 } from './b2b/radarAndMatrixCanvas';
+import {
+  LEARNING_MODULES,
+  CASE_STUDIES,
+  B2B_QUIZ_QUESTIONS,
+  GLOSSARY_TERMS,
+  EDUCATIONAL_TOOLTIPS,
+  CaseStudy,
+  QuizQuestion,
+  GlossaryTerm
+} from './b2b/learningEngine';
 
 // ==========================================
 // Application State
@@ -83,6 +93,8 @@ window.addEventListener('DOMContentLoaded', () => {
   setupProposalModal();
   setupHeaderActionButtons();
   setupOpportunityTable();
+  setupEducationalAcademy();
+  setupEducationalTooltips();
 
   // 3. Initial UI & Canvas Render
   updateSimulatorUI();
@@ -841,6 +853,26 @@ function applyLanguageTranslations(lang: 'ar' | 'en'): void {
   setElemText('arrChartTitle', 'منحنى نمو الإيرادات السنوية المتكررة (12-Month ARR Trajectory)', '12-Month ARR Cumulative Trajectory');
   setElemText('arrChartSub', 'مقارنة المسار العضوي الأساسي مقابل تسارع نَمَاء الاستراتيجي عبر التحالفات', 'Baseline organic curve vs. NAMA strategic BD acceleration');
 
+  // Educational Tab & Header Action
+  setElemText('tabLabelEdu', 'المختبر التعليمي والمعجم B2B', 'Educational Academy & Glossary');
+  setElemText('eduBtnText', 'أكاديمية B2B', 'B2B Academy');
+  setElemText('academyBadgeText', 'المختبر التعليمي والمعجم التفاعلي B2B', 'B2B Interactive Learning Lab & Glossary');
+  setElemText(
+    'academyTitle',
+    'أكاديمية تطوير الأعمال والشراكات الاستراتيجية وذكاء الإيرادات',
+    'B2B Business Development, Strategic Partnerships & Revenue Academy'
+  );
+  setElemText(
+    'academySubtitle',
+    'منهج تفاعلي متكامل يجمع بين الشرح الأكاديمي الرصين، محاكاة السيناريوهات الحية، حل معضلات التفاوض، والاختبار المهاري الختامي المقنن',
+    'A rigorous, interactive curriculum combining pedagogical depth, real-world case simulations, negotiation dilemmas, and verified skills mastery'
+  );
+
+  setElemText('subtabTitleModules', 'الركائز التعليمية الخمس', '5 Core Learning Modules');
+  setElemText('subtabTitleCases', 'محاكي السيناريوهات والحالات الواقعية', 'Real-World Case Simulator');
+  setElemText('subtabTitleQuiz', 'الاختبار المهاري الختامي (10 أسئلة)', 'Mastery Skills Quiz (10 Questions)');
+  setElemText('subtabTitleGlossary', 'معجم المعادلات والمصطلحات المشروحة', 'Formulas & Terminology Glossary');
+
   // Footer
   setElemText(
     'footerAuthor',
@@ -848,3 +880,541 @@ function applyLanguageTranslations(lang: 'ar' | 'en'): void {
     'Architected & Developed by: Tareq Abuashi — Lead B2B Business Development Specialist'
   );
 }
+
+// ==========================================
+// B2B Educational Academy Engine & State
+// ==========================================
+let activeCaseIndex = 0;
+let currentQuizIndex = 0;
+let quizScore = 0;
+let quizAnswered = false;
+let activeGlossaryCategory = 'all';
+let glossarySearchQuery = '';
+
+function setupEducationalAcademy(): void {
+  // 1. Direct header button opens educational tab
+  const openEduBtn = document.getElementById('openEduTabBtn');
+  openEduBtn?.addEventListener('click', () => {
+    playClickSound();
+    const tabEdu = document.getElementById('tab-edu');
+    tabEdu?.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // 2. Subtab switching inside academy
+  const subtabBtns = document.querySelectorAll<HTMLButtonElement>('.academy-subtab-btn');
+  const subpanels = document.querySelectorAll<HTMLElement>('.academy-subpanel');
+
+  subtabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      playClickSound();
+      const targetSubtab = btn.getAttribute('data-subtab');
+
+      subtabBtns.forEach((b) => b.classList.remove('active'));
+      subpanels.forEach((p) => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      const targetPanel = document.getElementById(`subpanel-${targetSubtab}`);
+      targetPanel?.classList.add('active');
+    });
+  });
+
+  // 3. Render all academy components
+  renderLearningModules();
+  setupCaseStudiesSimulator();
+  renderQuizQuestion();
+  renderGlossaryCards();
+  setupGlossaryFiltersAndSearch();
+}
+
+// ==========================================
+// 1. Render Learning Modules (الركائز الخمس)
+// ==========================================
+function renderLearningModules(): void {
+  const container = document.getElementById('modulesContainer');
+  if (!container) return;
+
+  container.innerHTML = LEARNING_MODULES.map((mod, idx) => {
+    const isExpanded = idx === 0;
+    return `
+      <div class="module-card ${isExpanded ? 'expanded' : ''}" id="modCard-${mod.id}">
+        <div class="module-card-header" onclick="window.toggleModuleCard('${mod.id}')">
+          <div class="module-header-main">
+            <span class="module-number-badge">0${mod.number}</span>
+            <div class="module-icon-pill"><i class="${mod.icon}"></i></div>
+            <div class="module-titles">
+              <span class="module-badge-tag">${mod.badgeAr}</span>
+              <h4 class="module-title">${mod.titleAr}</h4>
+              <span class="module-title-en">${mod.titleEn}</span>
+            </div>
+          </div>
+          <button class="module-expand-btn" aria-label="Toggle Module">
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+
+        <div class="module-card-body">
+          <p class="module-summary">${mod.summaryAr}</p>
+
+          <div class="module-concepts-list">
+            <h5 class="concepts-list-title"><i class="fa-solid fa-key"></i> المفاهيم والمحاور الجوهرية:</h5>
+            ${mod.coreConceptsAr.map(c => `
+              <div class="concept-item">
+                <span class="concept-bullet"><i class="fa-solid fa-check"></i></span>
+                <div>
+                  <strong>${c.title}:</strong>
+                  <p>${c.desc}</p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          ${mod.formulaAr ? `
+            <div class="module-formula-box">
+              <span class="formula-box-header"><i class="fa-solid fa-calculator"></i> ${mod.formulaAr.name}:</span>
+              <div class="formula-code">${mod.formulaAr.formula}</div>
+              <p class="formula-example"><strong>تطبيق عملي:</strong> ${mod.formulaAr.example}</p>
+            </div>
+          ` : ''}
+
+          <div class="module-strategic-tip">
+            <span class="tip-icon"><i class="fa-solid fa-lightbulb"></i></span>
+            <p>${mod.strategicTipAr}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Global toggle for module cards
+(window as any).toggleModuleCard = (moduleId: string) => {
+  playClickSound();
+  const card = document.getElementById(`modCard-${moduleId}`);
+  if (card) {
+    card.classList.toggle('expanded');
+  }
+};
+
+// ==========================================
+// 2. Real-World Case Studies Simulator
+// ==========================================
+function setupCaseStudiesSimulator(): void {
+  const selectorBar = document.getElementById('caseSelectorBar');
+  if (!selectorBar) return;
+
+  // Render Case Selector Pills
+  selectorBar.innerHTML = CASE_STUDIES.map((c, idx) => `
+    <button class="case-pill-btn ${idx === activeCaseIndex ? 'active' : ''}" data-case-idx="${idx}">
+      <i class="${c.icon}"></i>
+      <span>${c.sectorAr.split(' (')[0]}</span>
+    </button>
+  `).join('');
+
+  selectorBar.querySelectorAll<HTMLButtonElement>('.case-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      playClickSound();
+      const idx = parseInt(btn.getAttribute('data-case-idx') || '0', 10);
+      activeCaseIndex = idx;
+      selectorBar.querySelectorAll('.case-pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderActiveCaseStudy();
+    });
+  });
+
+  renderActiveCaseStudy();
+}
+
+function renderActiveCaseStudy(): void {
+  const container = document.getElementById('caseActiveContainer');
+  if (!container) return;
+
+  const currentCase = CASE_STUDIES[activeCaseIndex];
+
+  container.innerHTML = `
+    <div class="case-study-card">
+      <div class="case-header">
+        <div class="case-header-left">
+          <span class="case-sector-badge"><i class="${currentCase.icon}"></i> ${currentCase.sectorAr}</span>
+          <h4 class="case-title">${currentCase.titleAr}</h4>
+          <span class="case-client-tag">الجهة الشريكة: <strong>${currentCase.clientAr}</strong></span>
+        </div>
+        <div class="case-index-pill">دراسة حالة #${activeCaseIndex + 1} من 4</div>
+      </div>
+
+      <div class="case-body">
+        <div class="case-scenario-box">
+          <h5 class="box-title"><i class="fa-solid fa-briefcase"></i> معطيات الموقف التعاقدي:</h5>
+          <p>${currentCase.scenarioAr}</p>
+        </div>
+
+        <div class="case-challenge-box">
+          <h5 class="challenge-title"><i class="fa-solid fa-triangle-exclamation"></i> التحدي التفاوضي أمامك:</h5>
+          <p>${currentCase.challengeAr}</p>
+        </div>
+
+        <div class="case-options-section">
+          <h5 class="options-prompt"><i class="fa-solid fa-hand-pointer"></i> اختر القرار الاستراتيجي الذي ستتخذه كأخصائي تطوير أعمال:</h5>
+          <div class="case-options-list">
+            ${currentCase.options.map((opt, optIdx) => `
+              <button class="case-option-btn" onclick="window.selectCaseOption(${activeCaseIndex}, ${optIdx})">
+                <span class="opt-letter">${String.fromCharCode(65 + optIdx)}</span>
+                <span class="opt-text">${opt.textAr}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="case-feedback-area" id="caseFeedbackArea" style="display: none;"></div>
+      </div>
+    </div>
+  `;
+}
+
+// Global case option handler
+(window as any).selectCaseOption = (caseIdx: number, optIdx: number) => {
+  const currentCase = CASE_STUDIES[caseIdx];
+  const chosenOpt = currentCase.options[optIdx];
+  const feedbackArea = document.getElementById('caseFeedbackArea');
+  if (!feedbackArea) return;
+
+  const optionBtns = document.querySelectorAll<HTMLButtonElement>('.case-option-btn');
+  optionBtns.forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === optIdx) {
+      btn.classList.add(chosenOpt.isCorrect ? 'chosen-correct' : 'chosen-incorrect');
+    } else if (currentCase.options[idx].isCorrect) {
+      btn.classList.add('reveal-correct');
+    }
+  });
+
+  if (chosenOpt.isCorrect) {
+    playContractClosedChord();
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.7 },
+      colors: ['#10b981', '#f59e0b', '#06b6d4']
+    });
+  } else {
+    playStageSound(1);
+  }
+
+  feedbackArea.style.display = 'block';
+  feedbackArea.className = `case-feedback-area ${chosenOpt.isCorrect ? 'feedback-success' : 'feedback-warning'}`;
+  feedbackArea.innerHTML = `
+    <div class="feedback-header">
+      <span class="feedback-icon"><i class="fa-solid ${chosenOpt.isCorrect ? 'fa-circle-check' : 'fa-circle-xmark'}"></i></span>
+      <h5 class="feedback-title">${chosenOpt.isCorrect ? 'قرار استراتيجي ممتاز وصحيح 100%' : 'قرار يحتاج إلى إعادة تقييم وتصحيح'}</h5>
+    </div>
+    <p class="feedback-explanation">${chosenOpt.explanationAr}</p>
+    <div class="feedback-impact-box">
+      <strong><i class="fa-solid fa-chart-line"></i> الأثر الاستراتيجي والمالي لهذا القرار:</strong>
+      <p>${chosenOpt.impactAr}</p>
+    </div>
+  `;
+};
+
+// ==========================================
+// 3. B2B Mastery Quiz (10 أسئلة مهارية)
+// ==========================================
+function renderQuizQuestion(): void {
+  const container = document.getElementById('quizContainerCard');
+  if (!container) return;
+
+  if (currentQuizIndex >= B2B_QUIZ_QUESTIONS.length) {
+    renderQuizFinalResult(container);
+    return;
+  }
+
+  const q = B2B_QUIZ_QUESTIONS[currentQuizIndex];
+  quizAnswered = false;
+
+  container.innerHTML = `
+    <div class="quiz-active-block">
+      <!-- Quiz Progress Header -->
+      <div class="quiz-top-bar">
+        <div class="quiz-step-tag">
+          <i class="fa-solid fa-list-ol"></i>
+          <span>السؤال <strong>${currentQuizIndex + 1}</strong> من <strong>10</strong></span>
+        </div>
+        <div class="quiz-domain-tag">
+          <i class="fa-solid fa-tag"></i>
+          <span>${q.domainAr}</span>
+        </div>
+      </div>
+
+      <!-- Quiz Progress Bar -->
+      <div class="quiz-progress-track">
+        <div class="quiz-progress-fill" style="width: ${((currentQuizIndex) / 10) * 100}%;"></div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="quiz-question-box">
+        <h4 class="quiz-question-text">${q.questionAr}</h4>
+      </div>
+
+      <!-- Options -->
+      <div class="quiz-answers-list" id="quizAnswersList">
+        ${q.options ? q.options.map((opt, optIdx) => `
+          <button class="quiz-answer-btn" onclick="window.handleQuizAnswer(${optIdx})">
+            <span class="ans-letter">${q.type === 'tf' ? (opt === 'صح' ? '✓' : '✗') : String.fromCharCode(65 + optIdx)}</span>
+            <span class="ans-text">${opt}</span>
+          </button>
+        `).join('') : ''}
+      </div>
+
+      <!-- Realtime Feedback -->
+      <div class="quiz-feedback-box" id="quizFeedbackBox" style="display: none;"></div>
+
+      <!-- Next Button -->
+      <div class="quiz-action-footer" id="quizActionFooter" style="display: none;">
+        <button class="quiz-next-btn" onclick="window.advanceQuizQuestion()">
+          <span>${currentQuizIndex === 9 ? 'عرض النتيجة النهائية والتقييم المهاري' : 'السؤال التالي'}</span>
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Global quiz answer handler
+(window as any).handleQuizAnswer = (selectedIdx: number) => {
+  if (quizAnswered) return;
+  quizAnswered = true;
+
+  const q = B2B_QUIZ_QUESTIONS[currentQuizIndex];
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.quiz-answer-btn');
+  const feedbackBox = document.getElementById('quizFeedbackBox');
+  const actionFooter = document.getElementById('quizActionFooter');
+
+  let isCorrect = false;
+  if (q.type === 'mcq') {
+    isCorrect = selectedIdx === q.correctAnswer;
+  } else if (q.type === 'tf') {
+    const selectedText = q.options ? q.options[selectedIdx] : '';
+    isCorrect = selectedText === q.correctAnswer;
+  }
+
+  if (isCorrect) {
+    quizScore++;
+    playContractClosedChord();
+  } else {
+    playStageSound(0);
+  }
+
+  buttons.forEach((btn, idx) => {
+    btn.disabled = true;
+    let btnIsCorrect = false;
+    if (q.type === 'mcq') {
+      btnIsCorrect = idx === q.correctAnswer;
+    } else if (q.type === 'tf') {
+      btnIsCorrect = q.options ? q.options[idx] === q.correctAnswer : false;
+    }
+
+    if (btnIsCorrect) {
+      btn.classList.add('correct-answer');
+    }
+    if (idx === selectedIdx && !isCorrect) {
+      btn.classList.add('wrong-answer');
+    }
+  });
+
+  if (feedbackBox) {
+    feedbackBox.style.display = 'block';
+    feedbackBox.className = `quiz-feedback-box ${isCorrect ? 'fb-correct' : 'fb-incorrect'}`;
+    feedbackBox.innerHTML = `
+      <div class="fb-header">
+        <i class="fa-solid ${isCorrect ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+        <strong>${isCorrect ? 'إجابة صحيحة ومتقنة!' : 'إجابة غير صحيحة — التوضيح التعليمي:'}</strong>
+      </div>
+      <p class="fb-explanation">${q.explanationAr}</p>
+    `;
+  }
+
+  if (actionFooter) {
+    actionFooter.style.display = 'flex';
+  }
+};
+
+(window as any).advanceQuizQuestion = () => {
+  playClickSound();
+  currentQuizIndex++;
+  renderQuizQuestion();
+};
+
+function renderQuizFinalResult(container: HTMLElement): void {
+  playContractClosedChord();
+  if (quizScore >= 8) {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#10b981', '#f59e0b', '#06b6d4', '#ffffff']
+    });
+  }
+
+  let feedbackText = '';
+  let feedbackBadge = '';
+  let badgeClass = '';
+
+  if (quizScore >= 8) {
+    badgeClass = 'mastery-high';
+    feedbackBadge = 'إتقان مهاري متقدم في تطوير الأعمال';
+    feedbackText = 'أحسنت، أنت الآن قادر على قيادة وتأهيل صفقات الـ B2B الكبرى، صياغة العروض الرابحة وحساب اقتصاديات النمو بكفاءة واحترافية.';
+  } else if (quizScore >= 5) {
+    badgeClass = 'mastery-mid';
+    feedbackBadge = 'مستوى جيد وقريب من الإتقان الكامل';
+    feedbackText = 'مستوى جيد وقريب من الإتقان الكامل؛ راجع الركائز التعليمية ومحاكي الحالات لتعزيز مهارات التفاوض وتأهيل MEDDIC.';
+  } else {
+    badgeClass = 'mastery-low';
+    feedbackBadge = 'في طور البناء وتطوير المهارة';
+    feedbackText = 'أنت في طور التقدم وبناء المهارة؛ راجع بطاقات الشرح ومعجم المصطلحات ثم جرب السيناريوهات العملية مجدداً.';
+  }
+
+  // Strict Rule 8: No restart button! Clean, mature feedback with LTR score formatting.
+  container.innerHTML = `
+    <div class="quiz-result-card ${badgeClass}">
+      <div class="result-celebration-icon">
+        <i class="fa-solid ${quizScore >= 8 ? 'fa-trophy' : quizScore >= 5 ? 'fa-award' : 'fa-book-open-reader'}"></i>
+      </div>
+      <span class="result-badge">${feedbackBadge}</span>
+      <h3 class="result-title">نتيجة التقييم النهائي لمهارات تطوير الأعمال B2B</h3>
+
+      <div class="score-display-wrap">
+        <span class="score-text-label">الدرجة المكتسبة:</span>
+        <span class="score-number-badge" style="direction: ltr; display: inline-block;">${quizScore} / 10</span>
+      </div>
+
+      <p class="result-pedagogical-feedback">${feedbackText}</p>
+
+      <div class="result-author-footer">
+        <i class="fa-solid fa-crown"></i>
+        <span>معتمد ضمن منظومة نَمَاء — إعداد وتطوير: <strong>أ. طارق ابوعشي</strong></span>
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// 4. Glossary & Formulas Engine
+// ==========================================
+function renderGlossaryCards(): void {
+  const container = document.getElementById('glossaryCardsGrid');
+  if (!container) return;
+
+  const filtered = GLOSSARY_TERMS.filter((term) => {
+    const matchCategory = activeGlossaryCategory === 'all' || term.category === activeGlossaryCategory;
+    const matchSearch =
+      glossarySearchQuery === '' ||
+      term.code.toLowerCase().includes(glossarySearchQuery.toLowerCase()) ||
+      term.nameAr.toLowerCase().includes(glossarySearchQuery.toLowerCase()) ||
+      term.nameEn.toLowerCase().includes(glossarySearchQuery.toLowerCase()) ||
+      term.definitionAr.toLowerCase().includes(glossarySearchQuery.toLowerCase());
+    return matchCategory && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="glossary-empty-state">
+        <i class="fa-solid fa-search"></i>
+        <p>لا توجد مصطلحات مطابقة لبحثك الحالي.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map((term) => `
+    <div class="glossary-term-card">
+      <div class="term-header">
+        <span class="term-code-pill">${term.code}</span>
+        <span class="term-cat-tag ${term.category}">${getCategoryLabel(term.category)}</span>
+      </div>
+      <h4 class="term-name-ar">${term.nameAr}</h4>
+      <span class="term-name-en">${term.nameEn}</span>
+      <p class="term-definition">${term.definitionAr}</p>
+
+      ${term.formula ? `
+        <div class="term-formula-strip">
+          <span class="formula-label"><i class="fa-solid fa-function"></i> الصيغة الرياضية:</span>
+          <code class="formula-math">${term.formula}</code>
+        </div>
+      ` : ''}
+
+      <div class="term-example-box">
+        <strong>مثال تطبيقي:</strong> ${term.exampleAr}
+      </div>
+    </div>
+  `).join('');
+}
+
+function getCategoryLabel(cat: string): string {
+  switch (cat) {
+    case 'financial': return 'مالية واقتصادية';
+    case 'methodology': return 'منهجية MEDDIC';
+    case 'pipeline': return 'مسار الصفقات';
+    case 'strategy': return 'استراتيجية وتفاوض';
+    default: return 'عام';
+  }
+}
+
+function setupGlossaryFiltersAndSearch(): void {
+  const filterPills = document.querySelectorAll<HTMLButtonElement>('#glossaryFilterPills .filter-pill');
+  filterPills.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      playClickSound();
+      filterPills.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeGlossaryCategory = btn.getAttribute('data-category') || 'all';
+      renderGlossaryCards();
+    });
+  });
+
+  const searchInput = document.getElementById('glossarySearchInput') as HTMLInputElement | null;
+  searchInput?.addEventListener('input', (e) => {
+    glossarySearchQuery = (e.target as HTMLInputElement).value.trim();
+    renderGlossaryCards();
+  });
+}
+
+// ==========================================
+// 5. Educational Quick Tooltips Modal
+// ==========================================
+function setupEducationalTooltips(): void {
+  const modal = document.getElementById('eduTooltipModal');
+  const backdrop = document.getElementById('eduTooltipBackdrop');
+  const closeBtn = document.getElementById('eduTooltipCloseBtn');
+  const titleEl = document.getElementById('eduTooltipTitle');
+  const descEl = document.getElementById('eduTooltipDesc');
+  const tipEl = document.getElementById('eduTooltipTip');
+
+  const closeTooltip = () => {
+    playClickSound();
+    modal?.classList.remove('show');
+    modal?.setAttribute('aria-hidden', 'true');
+  };
+
+  closeBtn?.addEventListener('click', closeTooltip);
+  backdrop?.addEventListener('click', closeTooltip);
+
+  const triggers = document.querySelectorAll<HTMLButtonElement>('.edu-info-btn');
+  triggers.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playClickSound();
+      const key = btn.getAttribute('data-info');
+      if (!key) return;
+
+      const item = EDUCATIONAL_TOOLTIPS[key];
+      if (item) {
+        if (titleEl) titleEl.textContent = item.titleAr;
+        if (descEl) descEl.textContent = item.descAr;
+        if (tipEl) tipEl.textContent = item.tipAr;
+
+        modal?.classList.add('show');
+        modal?.setAttribute('aria-hidden', 'false');
+      }
+    });
+  });
+}
+
