@@ -1060,8 +1060,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: var(--text-muted);
   line-height: 1.2;
 }
-  color: var(--text-muted);
-}
 
 /* KPI Financial Summary Grid / Bento Grid */
 .kpi-financial-grid,
